@@ -1,0 +1,62 @@
+name: actividad1-scott
+
+services:
+  configsvr:
+    image: mongo:8.0.16
+    command: [mongod, --configsvr, --replSet, configRS, --port, '27017', --bind_ip_all, --dbpath, /data/configdb]
+    volumes:
+      - config-data:/data/configdb
+      - ./scripts:/scripts:ro
+    networks: [mongo-net]
+
+  shard1:
+    image: mongo:8.0.16
+    command: [mongod, --shardsvr, --replSet, shard1RS, --port, '27017', --bind_ip_all]
+    environment:
+      RS_NAME: shard1RS
+      RS_HOST: shard1
+    volumes:
+      - shard1-data:/data/db
+      - ./scripts:/scripts:ro
+    networks: [mongo-net]
+
+  shard2:
+    image: mongo:8.0.16
+    command: [mongod, --shardsvr, --replSet, shard2RS, --port, '27017', --bind_ip_all]
+    environment:
+      RS_NAME: shard2RS
+      RS_HOST: shard2
+    volumes:
+      - shard2-data:/data/db
+      - ./scripts:/scripts:ro
+    networks: [mongo-net]
+
+  shard3:
+    image: mongo:8.0.16
+    command: [mongod, --shardsvr, --replSet, shard3RS, --port, '27017', --bind_ip_all]
+    environment:
+      RS_NAME: shard3RS
+      RS_HOST: shard3
+    volumes:
+      - shard3-data:/data/db
+      - ./scripts:/scripts:ro
+    networks: [mongo-net]
+
+  mongos:
+    image: mongo:8.0.16
+    command: [mongos, --configdb, 'configRS/configsvr:27017', --port, '27017', --bind_ip_all]
+    ports:
+      - "127.0.0.1:27030:27017"
+    volumes:
+      - ./scripts:/scripts:ro
+    networks: [mongo-net]
+
+networks:
+  mongo-net:
+    driver: bridge
+
+volumes:
+  config-data:
+  shard1-data:
+  shard2-data:
+  shard3-data:
